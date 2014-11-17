@@ -1,5 +1,7 @@
 package csu.project.othello_tmp;
 
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Random;
@@ -12,7 +14,7 @@ import csu.project.othello_tmp.player.Player;
 
 public class Main{
 	public static void main(String[] args){
-		int ITERATIONS = 10, GAMES = 20, PLAYERS = 100;
+		int ITERATIONS = 100, GAMES = 20, PLAYERS = 100;
 		int[] HIDDEN_LAYERS = new int[]{40,20};
 		
 		LinkedHashMap<Player,Integer> scores = new LinkedHashMap<Player,Integer>();
@@ -64,20 +66,32 @@ public class Main{
 			
 			//print out results
 			int index = 0;
-			for(Player player : scores.keySet())
-				System.out.println(index++ + " : " + player + " : " + scores.get(player));
+			for(Player player : scores.keySet()){
+				System.out.println(index++ + " : " + player + " : " + player.getAvgRank() + " : " + player.getNumRanks() + " : " + scores.get(player));
+			}
 			
 			//remove the bottom half of players
 			ArrayList<Player> rankedPlayers = new ArrayList<Player>();
 			for(int j=GAMES; j >=0; j--){
 				for(Player player : scores.keySet()){
-					if(scores.get(player) == j)
+					if(scores.get(player) == j){
+						player.addRank(rankedPlayers.size());
 						rankedPlayers.add(player);
+					}
 				}
 			}
 			
 			while(rankedPlayers.size() > PLAYERS/2)
 				rankedPlayers.remove(rankedPlayers.size()-1);
+			
+			//write out top ranking player to file
+			try{
+				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("/home/hamersaw/Desktop/" + i + ".txt"));
+				
+				out.writeObject(((NeuralNetworkPlayer)rankedPlayers.get(0)).getNetwork());
+			}catch(Exception e){
+				e.printStackTrace();
+			}
 			
 			//mutate existing players
 			for(int j=0; j<PLAYERS/2; j++){
@@ -106,7 +120,6 @@ public class Main{
 					}
 				}
 				
-				//TODO mutate players
 				rankedPlayers.add(new NeuralNetworkPlayer(cloneNetwork));
 			}
 			

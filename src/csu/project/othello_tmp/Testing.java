@@ -1,67 +1,38 @@
 package csu.project.othello_tmp;
 
-import java.util.Random;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 
-import com.heatonresearch.book.introneuralnet.neural.feedforward.FeedforwardLayer;
 import com.heatonresearch.book.introneuralnet.neural.feedforward.FeedforwardNetwork;
+
+import csu.project.othello_tmp.player.HumanPlayer;
+import csu.project.othello_tmp.player.NeuralNetworkPlayer;
+import csu.project.othello_tmp.player.Player;
 
 public class Testing{
 	public static void main(String[] args){
-		FeedforwardNetwork network = new FeedforwardNetwork();
+		FeedforwardNetwork network = null;
 		
-		FeedforwardLayer input = new FeedforwardLayer(64);
-		network.addLayer(input);
-		
-		FeedforwardLayer hidden = new FeedforwardLayer(40);
-		network.addLayer(hidden);
-		
-		FeedforwardLayer output = new FeedforwardLayer(1);
-		network.addLayer(output);
-		
-		network.reset();
-		
-		double[] values = new double[64];
-		double[] results = network.computeOutputs(values);
-		
-		for(double result : results)
-			System.out.println(result);
-		
-		for(FeedforwardLayer layer : network.getLayers()){
-			for(double fireVal : layer.getFire())
-				System.out.print(fireVal + " : ");
+		try{
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream("/home/hamersaw/Desktop/6.txt"));
 			
-			System.out.println("");
+			network = (FeedforwardNetwork)in.readObject();
+			
+			in.close();
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 		
-		results = network.computeOutputs(values);
+		Player playerOne = new HumanPlayer(), playerTwo = new NeuralNetworkPlayer(network);
+		Board board = new Board();
 		
-		for(double result : results)
-			System.out.println(result);
+		OthelloGame game = new OthelloGame(board, playerOne, playerTwo);
+		game.play();
 		
-		Random random = new Random();
-		for(FeedforwardLayer layer : network.getLayers()){
-			double[] fire = layer.getFire();
-			
-			for(int i=0; i<fire.length; i++){
-				double fireValue = fire[i];
-				
-				double modValue;
-				if(fireValue < .5)
-					modValue = fireValue;
-				else
-					modValue = 1 - fireValue;
-				
-				modValue *= random.nextDouble();
-				if(random.nextDouble() > .5)
-					fireValue += modValue;
-				else
-					fireValue -= modValue;
-				
-				System.out.print(fireValue +  " : " );
-				layer.setFire(i, fireValue);
-			}
-			
-			System.out.println("");
-		}
+		System.out.println("FINAL BOARD");
+		System.out.println(board);
+		
+		System.out.println("human:" + board.getCount(playerOne));
+		System.out.println("ai:" + board.getCount(playerTwo));
 	}
 }
